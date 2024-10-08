@@ -17,3 +17,4 @@ isort
 black
 wandb
 opencv-python
+mpi4py
