@@ -1,8 +1,17 @@
+settings:
+  model_name: "facebook/opt-125m"  
+  vision_model_name: "openai/clip-vit-base-patch16"  
+  num_image_with_embedding: 1  
+  max_length: 512
+  keys_finetune:
+    - visual_projection
+    - num_image_with_embedding
+
 training:
   per_device_train_batch_size: 2
   gradient_accumulation_steps: 4
   num_train_epochs: 1
-  dataloader_num_workers: 16
+  dataloader_num_workers: 15
   fp16: true
   optim: "adamw_torch"
   learning_rate: 5.0e-5
@@ -12,76 +21,24 @@ training:
   eval_steps: 4000
   save_steps: 4000
   save_total_limit: 1
-  # deepspeed: configs/ds_config_zero1.json
-  deepspeed: GIT-training/onfigs/ds_config_zero1.json
-  output_dir: ./output/
-  report_to: "wandb"
+  output_dir: "/home/hata/repo/GIT-training/output"
+  deepspeed: "/home/hata/repo/GIT-training/configs/ds_config_zero1.json"
+  report_to: "none" 
 
-settings:
-  model_name: meta-llama/Llama-2-7b-chat-hf
-  vision_model_name: openai/clip-vit-base-patch16
-  num_image_with_embedding: # None or video sequence num
-  max_length: 512
-  keys_finetune:
-    - visual_projection
-    - num_image_with_embedding
+use_lora: false
 
-use_lora: true
 lora:
-  r: 8
+  r: 4
   lora_alpha: 32
+  lora_dropout: 0.05
+  bias: "none"
   target_modules:
-    - q_proj
-    - v_proj
-  lora_dropout: 0.01
-  bias: none
-  task_type: CAUSAL_LM
-
-# dataset_type:
-#   - coco
-#   - textcap
-#   - image-paragraph-captioning
-#   - coco-goi
-#   - coco-text
-#   - imagenet
-#   - coco-itm
-#   - snli-ve
-#   - mocheg
-#   - iqa
-#   - vqa-v2
-#   - shapes
-#   - docvqa
-#   - ocr-vqa
-#   - st-vqa
-#   - text-vqa
-#   - gqa
-#   - okvqa
-#   - a-okvqa
-#   - viquae
-#   - clevr
-#   - vcr
-#   - visual-mrc
-#   - visual-dialog
-#   - multi30k
-
-# dataset_type:
-#   - coco
-#   - textcap
-#   - image-paragraph-captioning
-#   - coco-goi
-#   - coco-text
-#   - coco-itm
-#   - vqa-v2
-#   - docvqa
-#   - ocr-vqa
-#   - st-vqa
-#   - text-vqa
-#   - gqa
-#   - okvqa
-#   - a-okvqa
-#   - viquae
-#   - visual-mrc
+    - "q_proj"
+    - "v_proj"
 
 dataset_type:
-  - coco
-  - vqa-v2
+  - "coco"
+  - "vqa-v2"
+
+dataset_save_path: "/home/hata/repo/GIT-training/saved_datasets"
+cache_dir: "/home/hata/.cache/huggingface/datasets"

@@ -31,7 +31,7 @@ class SupervisedDataset(Dataset):
         self,
         model_name: str,
         vision_model_name: str,
-        loaded_dataset: datasets.GeneratorBasedBuilder,
+        loaded_dataset: datasets.Dataset,
         max_length: int = 128,
     ):
         super(SupervisedDataset, self).__init__()
@@ -43,9 +43,9 @@ class SupervisedDataset(Dataset):
         self.processor.tokenizer = AutoTokenizer.from_pretrained(
             model_name, padding_side="right", use_fast=True if "mpt" in model_name else False
         )
-        if "llama" in model_name:
+        if "llama" in model_name.lower():
             self.processor.tokenizer.pad_token = self.processor.tokenizer.eos_token
-        elif "mpt" in model_name:
+        elif "mpt" in model_name.lower():
             self.processor.tokenizer.pad_token = self.processor.tokenizer.eos_token
 
     def __len__(self) -> int:
@@ -80,75 +80,89 @@ class SupervisedDataset(Dataset):
 def load_model(
     model_name: str, vision_model_name: str, num_image_with_embedding: Optional[int]
 ) -> GitLLMForCausalLM:
-    if "opt" in model_name:
+    print(f"Loading model: {model_name}")
+    if "opt" in model_name.lower():
+        print("Detected 'opt' model.")
         git_config = GitOPTConfig.from_pretrained(model_name)
         git_config.set_vision_configs(
             num_image_with_embedding=num_image_with_embedding, vision_model_name=vision_model_name
         )
         model = GitOPTForCausalLM.from_pretrained(model_name, config=git_config)
+    else:
+        raise ValueError(f"Unsupported model type for model name: {model_name}")
     return model
 
 def load_pretrained_weight(model: GitLLMForCausalLM, weight_path: str):
     weight = {}
-    weight_path = glob.glob(f"{weight_path}/pytorch*.bin")
-    for w in weight_path:
+    weight_files = glob.glob(f"{weight_path}/pytorch*.bin")
+    for w in weight_files:
         weight_temp = torch.load(w, map_location="cpu")
         weight.update(weight_temp)
     model.load_state_dict(weight, strict=False)
 
 def apply_lora_model(model: GitLLMForCausalLM, model_name: str, config: dict) -> GitLLMForCausalLM:
     peft_config = LoraConfig(**config["lora"])
-    if "opt" in model_name:
+    model = get_peft_model(model, peft_config)
+    if "opt" in model_name.lower():
         model.model.decoder = get_peft_model(model.model.decoder, peft_config)
-    elif "llama" in model_name:
-        target_modules = []
-        for m in peft_config.target_modules:
-            target_modules += [
-                f"model.layers.{i}.self_attn.{m}" for i in range(len(model.model.layers))
-            ]
-
-        peft_config.target_modules = target_modules
-        model = get_peft_model(model, peft_config)
-        model.base_model.model.lm_head = model.lm_head
-        model = model.base_model.model
-    elif "mpt" in model_name:
-        model = get_peft_model(model, peft_config)
-        model.base_model.model.lm_head = model.lm_head
-        model = model.base_model.model
     return model
 
 def set_trainable_params(model: GitLLMForCausalLM, model_name: str, keys_finetune: list) -> None:
-    if "mpt" in model_name:
-        for name, p in model.transformer.named_parameters():
-            if np.any([k in name for k in keys_finetune]):
-                p.requires_grad = True
-            else:
-                p.requires_grad = False
-    else:
-        for name, p in model.model.named_parameters():
-            if np.any([k in name for k in keys_finetune]):
-                p.requires_grad = True
-            else:
-                p.requires_grad = False
+    for name, p in model.model.named_parameters():
+        if np.any([k in name for k in keys_finetune]):
+            p.requires_grad = True
+        else:
+            p.requires_grad = False
 
 def get_dataset(config: dict) -> Union[Dataset, Dataset]:
-    if config.get("dataset_type") is not None:
-        # キャッシュを無視して再ダウンロード
-        dataset_list = [
-            datasets.load_dataset("MMInstruction/M3IT", i, cache_dir='/home/hata/.cache/huggingface/datasets', download_mode="force_redownload") for i in config["dataset_type"]
-        ]
-        train_dataset = ConcatDataset([d["train"] for d in dataset_list])
-        val_dataset_list = []
-        for d in dataset_list:
-            try:
-                val_dataset_list.append(d["validation"])
-            except:
-                print(f"{d['train']._info.config_name} has no validation set.")
-        val_dataset = ConcatDataset(val_dataset_list)
+    import os
+    from datasets import load_from_disk
+
+    dataset_save_path = config.get("dataset_save_path", "./saved_datasets")
+    train_dataset_path = os.path.join(dataset_save_path, "train_dataset")
+    val_dataset_path = os.path.join(dataset_save_path, "val_dataset")
+
+    if os.path.exists(train_dataset_path) and os.path.exists(val_dataset_path):
+        # データセットが既に保存されている場合、ディスクから読み込む
+        print("Loading datasets from disk...")
+        train_dataset = load_from_disk(train_dataset_path)
+        val_dataset = load_from_disk(val_dataset_path)
     else:
-        coco_datasets = datasets.load_dataset("MMInstruction/M3IT", "coco", cache_dir='/home/hata/.cache/huggingface/datasets', download_mode="force_redownload")
-        train_dataset = coco_datasets["train"]
-        val_dataset = coco_datasets["validation"]
+        # データセットをダウンロードして保存する
+        print("Downloading and processing datasets...")
+        if config.get("dataset_type") is not None:
+            dataset_list = [
+                datasets.load_dataset(
+                    "MMInstruction/M3IT",
+                    i,
+                    cache_dir=config.get('cache_dir', None)
+                ) for i in config["dataset_type"]
+            ]
+            train_datasets = [d["train"] for d in dataset_list]
+            train_dataset = datasets.concatenate_datasets(train_datasets)
+
+            val_datasets = []
+            for d in dataset_list:
+                if "validation" in d:
+                    val_datasets.append(d["validation"])
+                else:
+                    print(f"{d['train']._info.config_name} has no validation set.")
+            val_dataset = datasets.concatenate_datasets(val_datasets)
+        else:
+            coco_datasets = datasets.load_dataset(
+                "MMInstruction/M3IT",
+                "coco",
+                cache_dir=config.get('cache_dir', None)
+            )
+            train_dataset = coco_datasets["train"]
+            val_dataset = coco_datasets["validation"]
+
+        # データセットをディスクに保存
+        os.makedirs(dataset_save_path, exist_ok=True)
+        train_dataset.save_to_disk(train_dataset_path)
+        val_dataset.save_to_disk(val_dataset_path)
+        print("Datasets saved to disk.")
+
     return train_dataset, val_dataset
 
 def main(config_file: str = CONFIG_PATH):
@@ -166,6 +180,7 @@ def main(config_file: str = CONFIG_PATH):
     vision_model_name = config["settings"]["vision_model_name"]
     num_image_with_embedding = config["settings"]["num_image_with_embedding"]
 
+    # データセットの取得
     train_dataset, val_dataset = get_dataset(config)
 
     max_length = config["settings"]["max_length"]
@@ -175,11 +190,11 @@ def main(config_file: str = CONFIG_PATH):
 
     model = load_model(model_name, vision_model_name, num_image_with_embedding)
 
-    if config["use_lora"]:
+    if config.get("use_lora", False):
         keys_finetune.append("lora")
         model = apply_lora_model(model, model_name, config)
 
-    if config["settings"]["load_pretrained"] is not None:
+    if config["settings"].get("load_pretrained") is not None:
         load_pretrained_weight(model, config["settings"]["load_pretrained"])
         print(
             f'Successfully loading pretrained weights from {config["settings"]["load_pretrained"]}'
@@ -201,7 +216,7 @@ def main(config_file: str = CONFIG_PATH):
         config["training"]["output_dir"], os.getenv("WANDB_NAME", "default") + "_final"
     )
     trainer.save_model(final_save_path)
-    if "zero3" in config["training"]["deepspeed"]:
+    if "zero3" in config["training"]["deepspeed"].lower():
         trainer.model_wrapped.save_checkpoint(final_save_path)
 
 if __name__ == "__main__":
