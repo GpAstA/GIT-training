@@ -12,7 +12,8 @@ training:
   eval_steps: 4000
   save_steps: 4000
   save_total_limit: 1
-  deepspeed: configs/ds_config_zero1.json
+  # deepspeed: configs/ds_config_zero1.json
+  deepspeed: GIT-training/onfigs/ds_config_zero1.json
   output_dir: ./output/
   report_to: "wandb"
 
@@ -36,29 +37,51 @@ lora:
   bias: none
   task_type: CAUSAL_LM
 
+# dataset_type:
+#   - coco
+#   - textcap
+#   - image-paragraph-captioning
+#   - coco-goi
+#   - coco-text
+#   - imagenet
+#   - coco-itm
+#   - snli-ve
+#   - mocheg
+#   - iqa
+#   - vqa-v2
+#   - shapes
+#   - docvqa
+#   - ocr-vqa
+#   - st-vqa
+#   - text-vqa
+#   - gqa
+#   - okvqa
+#   - a-okvqa
+#   - viquae
+#   - clevr
+#   - vcr
+#   - visual-mrc
+#   - visual-dialog
+#   - multi30k
+
+# dataset_type:
+#   - coco
+#   - textcap
+#   - image-paragraph-captioning
+#   - coco-goi
+#   - coco-text
+#   - coco-itm
+#   - vqa-v2
+#   - docvqa
+#   - ocr-vqa
+#   - st-vqa
+#   - text-vqa
+#   - gqa
+#   - okvqa
+#   - a-okvqa
+#   - viquae
+#   - visual-mrc
+
 dataset_type:
   - coco
-  - textcap
-  - image-paragraph-captioning
-  - coco-goi
-  - coco-text
-  - imagenet
-  - coco-itm
-  - snli-ve
-  - mocheg
-  - iqa
   - vqa-v2
-  - shapes
-  - docvqa
-  - ocr-vqa
-  - st-vqa
-  - text-vqa
-  - gqa
-  - okvqa
-  - a-okvqa
-  - viquae
-  - clevr
-  - vcr
-  - visual-mrc
-  - visual-dialog
-  - multi30k
