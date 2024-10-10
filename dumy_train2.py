@@ -17,6 +17,8 @@ from transformers import (AutoProcessor, AutoTokenizer, CLIPImageProcessor,
                           Trainer, TrainingArguments)
 
 from models.model_opt import GitOPTConfig, GitOPTForCausalLM
+import matplotlib.pyplot as plt
+
 
 GitLLMForCausalLM = Any
 
@@ -158,10 +160,11 @@ def get_dataset(config: dict) -> Union[Dataset, Dataset]:
         os.makedirs(dataset_save_path, exist_ok=True)
         train_dataset.save_to_disk(train_dataset_path)
         val_dataset.save_to_disk(val_dataset_path)
+        
 
     # データセットのサイズを減らす (例: 最初の100サンプルだけ使用)
-    train_dataset = train_dataset.select(range(100))
-    val_dataset = val_dataset.select(range(20))
+    train_dataset = train_dataset.select(range(10000))
+    val_dataset = val_dataset.select(range(200))
 
     return train_dataset, val_dataset
 
@@ -210,9 +213,31 @@ def main(config_file: str = CONFIG_PATH):
         args=training_args,
     )
 
+    # トレーニングの実行
     with torch.cuda.amp.autocast():
-        result = trainer.train()
+        train_result = trainer.train()
 
+    # トレーニング結果の損失を取得
+    train_loss = train_result.training_loss
+
+    # 検証データセットでの評価
+    eval_result = trainer.evaluate()
+    val_loss = eval_result['eval_loss']
+    print(f"Validation Loss: {val_loss}")
+
+    # トレーニングと検証の損失をプロット
+    train_losses = [train_loss]  # 実際のトレーニング損失
+    val_losses = [val_loss]
+
+    plt.plot(train_losses, label='Train Loss')
+    plt.plot(val_losses, label='Val Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.title('Training and Validation Loss')
+    plt.show()
+
+    # モデルの保存
     final_save_path = os.path.join(
         config["training"]["output_dir"], os.getenv("WANDB_NAME", "default") + "_final"
     )
