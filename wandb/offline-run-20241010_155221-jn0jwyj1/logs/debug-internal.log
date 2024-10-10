@@ -1,0 +1,16 @@
+{"time":"2024-10-10T15:52:21.290980291+09:00","level":"INFO","msg":"using version","core version":"0.18.3"}
+{"time":"2024-10-10T15:52:21.291028645+09:00","level":"INFO","msg":"created symlink","path":"/home/hata/repo/wandb/offline-run-20241010_155221-jn0jwyj1/logs/debug-core.log"}
+{"time":"2024-10-10T15:52:21.300709554+09:00","level":"INFO","msg":"created new stream","id":"jn0jwyj1"}
+{"time":"2024-10-10T15:52:21.300760532+09:00","level":"INFO","msg":"stream: started","id":"jn0jwyj1"}
+{"time":"2024-10-10T15:52:21.300821976+09:00","level":"INFO","msg":"sender: started","stream_id":{"value":"jn0jwyj1"}}
+{"time":"2024-10-10T15:52:21.300827876+09:00","level":"INFO","msg":"handler: started","stream_id":{"value":"jn0jwyj1"}}
+{"time":"2024-10-10T15:52:21.300813852+09:00","level":"INFO","msg":"writer: Do: started","stream_id":{"value":"jn0jwyj1"}}
+{"time":"2024-10-10T15:52:21.31814526+09:00","level":"INFO","msg":"wandb-core","!BADKEY":null}
+{"time":"2024-10-10T15:52:21.319565668+09:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-10-10T15:52:24.472772458+09:00","level":"INFO","msg":"stream: closing","id":"jn0jwyj1"}
+{"time":"2024-10-10T15:52:24.472868014+09:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-10-10T15:52:24.474553455+09:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-10-10T15:52:24.474867214+09:00","level":"INFO","msg":"handler: closed","stream_id":{"value":"jn0jwyj1"}}
+{"time":"2024-10-10T15:52:24.474906543+09:00","level":"INFO","msg":"sender: closed","stream_id":{"value":"jn0jwyj1"}}
+{"time":"2024-10-10T15:52:24.474892393+09:00","level":"INFO","msg":"writer: Close: closed","stream_id":{"value":"jn0jwyj1"}}
+{"time":"2024-10-10T15:52:24.47502967+09:00","level":"INFO","msg":"stream: closed","id":"jn0jwyj1"}
