@@ -18,3 +18,4 @@ black
 wandb
 opencv-python
 mpi4py
+matplotlib
