@@ -20,10 +20,9 @@ from models.model_opt import GitOPTConfig, GitOPTForCausalLM
 
 GitLLMForCausalLM = Any
 
-# configファイルのパスを定義
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'configs/training_config_exp050_llama.yml')
 
-# SupervisedDataset
+
 class SupervisedDataset(Dataset):
     """Dataset for supervised learning"""
 
@@ -123,12 +122,10 @@ def get_dataset(config: dict) -> Union[Dataset, Dataset]:
     val_dataset_path = os.path.join(dataset_save_path, "val_dataset")
 
     if os.path.exists(train_dataset_path) and os.path.exists(val_dataset_path):
-        # データセットが既に保存されている場合、ディスクから読み込む
         print("Loading datasets from disk...")
         train_dataset = load_from_disk(train_dataset_path)
         val_dataset = load_from_disk(val_dataset_path)
     else:
-        # データセットをダウンロードして保存する
         print("Downloading and processing datasets...")
         if config.get("dataset_type") is not None:
             dataset_list = [
@@ -157,7 +154,6 @@ def get_dataset(config: dict) -> Union[Dataset, Dataset]:
             train_dataset = coco_datasets["train"]
             val_dataset = coco_datasets["validation"]
 
-        # データセットをディスクに保存
         os.makedirs(dataset_save_path, exist_ok=True)
         train_dataset.save_to_disk(train_dataset_path)
         val_dataset.save_to_disk(val_dataset_path)
@@ -180,7 +176,6 @@ def main(config_file: str = CONFIG_PATH):
     vision_model_name = config["settings"]["vision_model_name"]
     num_image_with_embedding = config["settings"]["num_image_with_embedding"]
 
-    # データセットの取得
     train_dataset, val_dataset = get_dataset(config)
 
     max_length = config["settings"]["max_length"]
