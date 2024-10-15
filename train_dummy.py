@@ -22,10 +22,8 @@ import matplotlib.pyplot as plt
 
 GitLLMForCausalLM = Any
 
-# configファイルのパスを定義
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'configs/training_config_exp050_llama.yml')
 
-# SupervisedDataset
 class SupervisedDataset(Dataset):
     """Dataset for supervised learning"""
 

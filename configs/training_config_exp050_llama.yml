@@ -37,8 +37,34 @@ lora:
     - "v_proj"
 
 dataset_type:
-  - "coco"
   - "vqa-v2"
+  
+# dataset_type:
+#   - coco
+#   - textcap
+#   - image-paragraph-captioning
+#   - coco-goi
+#   - coco-text
+#   - imagenet
+#   - coco-itm
+#   - snli-ve
+#   - mocheg
+#   - iqa
+#   - vqa-v2
+#   - shapes
+#   - docvqa
+#   - ocr-vqa
+#   - st-vqa
+#   - text-vqa
+#   - gqa
+#   - okvqa
+#   - a-okvqa
+#   - viquae
+#   - clevr
+#   - vcr
+#   - visual-mrc
+#   - visual-dialog
+#   - multi30k
 
 dataset_save_path: "/home/hata/repo/GIT-training/saved_datasets"
 cache_dir: "/home/hata/.cache/huggingface/datasets"
