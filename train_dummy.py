@@ -161,7 +161,7 @@ def get_dataset(config: dict) -> Union[Dataset, Dataset]:
         
 
     # データセットのサイズを減らす (例: 最初の100サンプルだけ使用)
-    train_dataset = train_dataset.select(range(100000))
+    train_dataset = train_dataset.select(range(1000))
     val_dataset = val_dataset.select(range(200))
 
     return train_dataset, val_dataset

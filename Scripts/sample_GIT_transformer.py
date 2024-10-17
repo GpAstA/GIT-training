@@ -24,3 +24,5 @@ inputs = processor(
 sample = model.generate(**inputs, max_length=64)
 print(processor.tokenizer.decode(sample[0]))
 # two cats sleeping on a couch
+
+print(model)
